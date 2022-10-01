@@ -93,26 +93,46 @@ impl From<&str> for Ability {
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, enum_utils::FromStr)]
 pub enum Brand {
+    /// SquidForce
     B00 = 0,
+    /// Zink
     B01,
+    /// Krak-On
     B02,
+    /// Rockenberg
     B03,
+    /// Zekko
     B04,
+    /// Forge
     B05,
+    /// Firefin
     B06,
+    /// Skalop
     B07,
+    /// Splash Mob
     B08,
+    /// Inkline
     B09,
+    /// Tentatek
     B10,
+    /// Takoroka
     B11,
+    /// Annaki
     B15,
+    /// Enperry
     B16,
+    /// Toni Kensa
     B17,
     B18,
+    /// Barazushi
     B19,
+    /// Emberz
     B20,
+    /// Grizzco
     B97,
+    /// Cuttlegear
     B98,
+    /// amiibo
     B99,
     None,
 }
