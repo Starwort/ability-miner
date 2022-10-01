@@ -1,5 +1,6 @@
 #![feature(const_for, const_mut_refs)]
 use std::fmt::Display;
+use std::str::FromStr;
 
 pub const fn advance_seed(seed: &mut u32) -> u32 {
     *seed ^= *seed << 13;
@@ -81,6 +82,11 @@ impl Display for Ability {
             SubEffect_Reduction => write!(f, "Sub Resistance Up"),
             Action_Up => write!(f, "Intensify Action"),
         }
+    }
+}
+impl From<&str> for Ability {
+    fn from(val: &str) -> Self {
+        Self::from_str(val).unwrap()
     }
 }
 
@@ -226,6 +232,11 @@ impl Brand {
     #[inline]
     pub const fn max_num_drink(&self, drink: Ability) -> u32 {
         self.max_num() - Self::_WEIGHTS[*self as usize][drink as usize]
+    }
+}
+impl From<&str> for Brand {
+    fn from(val: &str) -> Self {
+        Self::from_str(val).unwrap()
     }
 }
 type BrandData = [u32; 14];
