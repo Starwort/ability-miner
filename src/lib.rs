@@ -11,7 +11,7 @@ pub const fn advance_seed(seed: &mut u32) -> u32 {
 
 #[repr(u32)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, enum_utils::FromStr)]
+#[derive(Debug, Clone, Copy, enum_utils::FromStr, PartialEq, Eq)]
 pub enum Ability {
     /// Ink Saver (Main)
     MainInk_Save = 0,
