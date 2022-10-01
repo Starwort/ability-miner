@@ -235,10 +235,10 @@ pub const fn get_ability(
     brand: Brand,
     drink: Option<Ability>,
 ) -> Ability {
-    let rv = brand.get_ability(*seed);
     advance_seed(seed);
+    let rv = brand.get_ability(*seed);
     if let Some(drink) = drink {
-        if *seed % 100 <= 30 {
+        if *seed % 100 <= 0x1D {
             drink
         } else {
             advance_seed(seed);
