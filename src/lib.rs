@@ -1,11 +1,14 @@
 #![feature(const_for, const_mut_refs)]
 use std::fmt::Display;
+#[cfg(not(feature = "wasm"))]
 use std::process::exit;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 
 use rayon::prelude::*;
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
 
 pub const fn advance_seed(seed: &mut u32) -> u32 {
     *seed ^= *seed << 13;
@@ -258,6 +261,15 @@ impl Brand {
     pub const fn max_num_drink(&self, drink: Ability) -> u32 {
         self.max_num() - Self::_WEIGHTS[*self as usize][drink as usize]
     }
+
+    #[inline]
+    pub const fn from_usize(brand: usize) -> Self {
+        use Brand::*;
+        [
+            B00, B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B15, B16, B17,
+            B18, B19, B20, B97, B98, B99, None,
+        ][brand]
+    }
 }
 impl From<&str> for Brand {
     fn from(val: &str) -> Self {
@@ -301,7 +313,8 @@ pub fn get_results(max_results: usize, gear_brand: Brand, slots: &[Slot]) -> Vec
             println!("Possible seed: {result}");
             count.fetch_add(1, Ordering::Relaxed);
         } else {
-            // exit(0)
+            #[cfg(not(feature = "wasm"))]
+            exit(0)
         }
     });
     results_vec.into_inner().unwrap()
@@ -318,4 +331,29 @@ pub fn slots_match(mut seed: u32, &gear_brand: &Brand, slots: &[Slot]) -> bool {
         }
     }
     true
+}
+
+#[cfg(feature = "wasm")]
+#[wasm_bindgen]
+pub fn mine(max_results: usize, gear_brand: u32, slots: &[u32]) -> Vec<u32> {
+    let converted = slots
+        .iter()
+        .map(|&data| {
+            let drink = data & 0xFF00;
+            let drink = drink >> 8;
+            Slot {
+                ability: Ability::from_usize((data & 0xFF) as usize),
+                drink: if drink == 0xFF {
+                    None
+                } else {
+                    Some(Ability::from_usize(drink as usize))
+                },
+            }
+        })
+        .collect::<Vec<_>>();
+    get_results(
+        max_results,
+        Brand::from_usize(gear_brand as usize),
+        &converted,
+    )
 }
