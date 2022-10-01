@@ -1,6 +1,11 @@
 #![feature(const_for, const_mut_refs)]
 use std::fmt::Display;
+use std::process::exit;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::Mutex;
+
+use rayon::prelude::*;
 
 pub const fn advance_seed(seed: &mut u32) -> u32 {
     *seed ^= *seed << 13;
@@ -278,4 +283,39 @@ pub const fn get_ability(
     } else {
         rv
     }
+}
+
+pub struct Slot {
+    pub ability: Ability,
+    pub drink: Option<Ability>,
+}
+
+pub fn get_results(max_results: usize, gear_brand: Brand, slots: &[Slot]) -> Vec<u32> {
+    let results = (0..=u32::MAX)
+        .into_par_iter()
+        .filter(|seed| slots_match(*seed, &gear_brand, &slots));
+    let count = AtomicU32::new(0);
+    let results_vec = Mutex::new(Vec::with_capacity(max_results));
+    results.for_each(|result| {
+        if count.load(Ordering::Relaxed) < 100 {
+            println!("Possible seed: {result}");
+            count.fetch_add(1, Ordering::Relaxed);
+        } else {
+            // exit(0)
+        }
+    });
+    results_vec.into_inner().unwrap()
+}
+
+pub fn slots_match(mut seed: u32, &gear_brand: &Brand, slots: &[Slot]) -> bool {
+    for Slot {
+        ability,
+        drink,
+    } in slots
+    {
+        if get_ability(&mut seed, gear_brand, *drink) != *ability {
+            return false;
+        }
+    }
+    true
 }

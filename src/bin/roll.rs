@@ -63,6 +63,6 @@ fn main() {
     let drink = drink.to_option();
     for _ in 0..times {
         let ability = get_ability(&mut seed, brand, drink);
-        println!("{seed}, {ability}");
+        println!("{seed:10} {seed:08x}, {ability}");
     }
 }

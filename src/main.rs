@@ -3,7 +3,7 @@ use std::fmt::Display;
 use std::process::exit;
 use std::sync::atomic::{AtomicU32, Ordering};
 
-use ability_miner::{get_ability, Ability, Brand};
+use ability_miner::{get_ability, get_results, Ability, Brand, Slot};
 use clap::Parser;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
@@ -40,11 +40,6 @@ where
     }
 }
 
-struct Slot {
-    ability: Ability,
-    drink: Option<Ability>,
-}
-
 fn main() {
     let mut args = args().peekable();
     args.next().unwrap();
@@ -61,29 +56,7 @@ fn main() {
         }
         slots.push(slot);
     }
-    let results = (0..=u32::MAX)
-        .into_par_iter()
-        .filter(|seed| slots_match(*seed, &gear_brand, &slots));
-    let count = AtomicU32::new(0);
-    results.for_each(|result| {
-        if count.load(Ordering::Relaxed) < 100 {
-            println!("Possible seed: {result}");
-            count.fetch_add(1, Ordering::Relaxed);
-        } else {
-            exit(0)
-        }
-    })
-}
-
-fn slots_match(mut seed: u32, &gear_brand: &Brand, slots: &[Slot]) -> bool {
-    for Slot {
-        ability,
-        drink,
-    } in slots
-    {
-        if get_ability(&mut seed, gear_brand, *drink) != *ability {
-            return false;
-        }
+    for seed in get_results(100, gear_brand, &slots) {
+        println!("{seed:10} {seed:08x}");
     }
-    true
 }
