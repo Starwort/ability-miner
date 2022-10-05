@@ -310,7 +310,8 @@ pub fn get_results(max_results: usize, gear_brand: Brand, slots: &[Slot]) -> Vec
     let results_vec = Mutex::new(Vec::with_capacity(max_results));
     results.for_each(|result| {
         if count.load(Ordering::Relaxed) < 100 {
-            println!("Possible seed: {result}");
+            let mut vec = results_vec.lock().unwrap();
+            vec.push(result);
             count.fetch_add(1, Ordering::Relaxed);
         } else {
             #[cfg(not(feature = "wasm"))]
