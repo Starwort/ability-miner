@@ -47,7 +47,9 @@ fn main() {
     let mut slots = Vec::new();
     while let Some(ability) = args.next() {
         let mut slot = Slot {
-            ability: ability.parse().unwrap(),
+            ability: ability
+                .parse()
+                .unwrap_or_else(|_| panic!("{ability} not a valid ability")),
             drink: None,
         };
         if args.peek().map(|s| &**s) == Some("drink") {

@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::str::FromStr;
 
 use ability_miner::*;
 use clap::Parser;
@@ -10,14 +11,17 @@ enum MyOption<T> {
 }
 impl<'a, T> From<&'a str> for MyOption<T>
 where
-    T: From<&'a str>,
+    T: FromStr,
 {
     fn from(val: &'a str) -> Self {
-        MyOption::Some(T::from(val))
+        match T::from_str(val) {
+            Ok(val) => Self::Some(val),
+            Err(_) => Self::None,
+        }
     }
 }
 impl<T> MyOption<T> {
-    pub fn to_option(self) -> Option<T> {
+    pub fn into_option(self) -> Option<T> {
         match self {
             Self::Some(val) => Some(val),
             Self::None => None,
@@ -44,7 +48,7 @@ struct Args {
     seed: u32,
     /// The gear brand, by internal name
     #[arg(short, long)]
-    brand: Brand,
+    brand: MyOption<Brand>,
     /// The drink you currently have active, if any
     #[arg(short, long, default_value_t = MyOption::<Ability>::None)]
     drink: MyOption<Ability>,
@@ -60,9 +64,13 @@ fn main() {
         drink,
         times,
     } = Args::parse();
-    let drink = drink.to_option();
+    let drink = drink.into_option();
     for _ in 0..times {
-        let ability = get_ability(&mut seed, brand, drink);
+        let ability = get_ability(
+            &mut seed,
+            brand.into_option().expect("Invalid brand provided"),
+            drink,
+        );
         println!("{seed:10} {seed:08x}, {ability}");
     }
 }
