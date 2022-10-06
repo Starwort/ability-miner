@@ -9,11 +9,13 @@ edition = "2021"
 clap = { version = "4.0.7", features = ["derive"] }
 enum-utils = "0.1.2"
 rayon = "1.5.3"
+serde = { version = "1.0.145", optional = true, features = ["serde_derive"] }
 wasm-bindgen = { version = "0.2.83", optional = true }
 
 [features]
 default = []
 wasm = ["dep:wasm-bindgen"]
+serde = ["dep:serde"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

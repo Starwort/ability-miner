@@ -20,6 +20,7 @@ pub const fn advance_seed(seed: &mut u32) -> u32 {
 #[repr(u32)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, enum_utils::FromStr, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Ability {
     /// Ink Saver (Main)
     MainInk_Save = 0,
@@ -138,6 +139,7 @@ impl From<&str> for Ability {
 
 #[repr(u32)]
 #[derive(Debug, Clone, Copy, enum_utils::FromStr)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Brand {
     /// SquidForce
     B00 = 0,
