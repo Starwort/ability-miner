@@ -70,6 +70,25 @@ impl Ability {
             Action_Up,
         ][val]
     }
+
+    pub const fn internal_name(&self) -> &'static str {
+        [
+            "MainInk_Save",
+            "SubInk_Save",
+            "InkRecovery_Up",
+            "HumanMove_Up",
+            "SquidMove_Up",
+            "SpecialIncrease_Up",
+            "RespawnSpecialGauge_Save",
+            "SpecialSpec_Up",
+            "RespawnTime_Save",
+            "JumpTime_Save",
+            "SubSpec_Up",
+            "OpInkEffect_Reduction",
+            "SubEffect_Reduction",
+            "Action_Up",
+        ][*self as usize]
+    }
 }
 impl Display for Ability {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -131,6 +150,7 @@ pub enum Brand {
     B16,
     /// Toni Kensa
     B17,
+    /// Unused, but still had brand data
     B18,
     /// Barazushi
     B19,
@@ -269,6 +289,14 @@ impl Brand {
             B00, B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B15, B16, B17,
             B18, B19, B20, B97, B98, B99, None,
         ][brand]
+    }
+
+    pub const fn internal_name(&self) -> &'static str {
+        [
+            "B00", "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09",
+            "B10", "B11", "B15", "B16", "B17", "B18", "B19", "B20", "B97", "B98",
+            "B99", "None",
+        ][*self as usize]
     }
 }
 impl From<&str> for Brand {
