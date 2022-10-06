@@ -89,6 +89,25 @@ impl Ability {
             "Action_Up",
         ][*self as usize]
     }
+
+    pub const fn legacy_internal_name(&self) -> &'static str {
+        [
+            "MainInk_Save",
+            "SubInk_Save",
+            "InkRecovery_Up",
+            "HumanMove_Up",
+            "SquidMove_Up",
+            "SpecialIncrease_Up",
+            "RespawnSpecialGauge_Save",
+            "SpecialTime_Up",
+            "RespawnTime_Save",
+            "JumpTime_Save",
+            "BombDistance_Up",
+            "OpInkEffect_Reduction",
+            "SubEffect_Reduction",
+            "Action_Up",
+        ][*self as usize]
+    }
 }
 impl Display for Ability {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
