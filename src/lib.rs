@@ -138,7 +138,7 @@ impl From<&str> for Ability {
 }
 
 #[repr(u32)]
-#[derive(Debug, Clone, Copy, enum_utils::FromStr)]
+#[derive(Debug, Clone, Copy, enum_utils::FromStr, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Brand {
     /// SquidForce
