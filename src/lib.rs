@@ -370,7 +370,7 @@ pub struct Slot {
 #[must_use]
 pub fn get_results<T: Iterator<Item = u32>>(
     candidates: T,
-    max_results: usize,
+    max_results: Option<usize>,
     gear_brand: Brand,
     slots: &[Slot],
 ) -> Vec<u32> {
@@ -381,28 +381,37 @@ pub fn get_results<T: Iterator<Item = u32>>(
     #[cfg(not(feature = "rayon"))]
     let results = candidates.filter(|seed| slots_match(*seed, &gear_brand, &slots));
     let count = AtomicU32::new(0);
-    let results_vec = Mutex::new(Vec::with_capacity(max_results));
-    results.for_each(|result| {
-        if count.load(Ordering::Relaxed) < 100 {
-            let mut vec = match results_vec.lock() {
+    if let Some(max_results) = max_results {
+        #[cfg(feature = "rayon")]
+        {
+            let results_vec = Mutex::new(Vec::with_capacity(max_results));
+            results.for_each(|result| {
+                if count.load(Ordering::Relaxed) < max_results {
+                    let mut vec = match results_vec.lock() {
+                        Ok(vec) => vec,
+                        _ => unreachable!(),
+                        // PoisonError
+                        // PoisonError can't happen as it happens only
+                        // when a thread
+                        // with a MutexGuard (obtained here) panics;
+                        // this thread can only
+                        // panic if obtaining the guard panics, so there
+                        // can never be a
+                        // PoisonError
+                    };
+                    vec.push(result);
+                    count.fetch_add(1, Ordering::Relaxed);
+                }
+            });
+            match results_vec.into_inner() {
                 Ok(vec) => vec,
-                _ => unreachable!(),
-                // PoisonError
-                // PoisonError can't happen as it happens only
-                // when a thread
-                // with a MutexGuard (obtained here) panics;
-                // this thread can only
-                // panic if obtaining the guard panics, so there
-                // can never be a
-                // PoisonError
-            };
-            vec.push(result);
-            count.fetch_add(1, Ordering::Relaxed);
+                _ => unreachable!(), // PoisonError
+            }
         }
-    });
-    match results_vec.into_inner() {
-        Ok(vec) => vec,
-        _ => unreachable!(), // PoisonError
+        #[cfg(not(feature = "rayon"))]
+        results.take(max_results).collect()
+    } else {
+        results.collect()
     }
 }
 
@@ -440,7 +449,7 @@ pub fn mine(max_results: usize, gear_brand: u32, slots: &[u32]) -> Vec<u32> {
         .collect::<Vec<_>>();
     get_results(
         0..=u32::MAX,
-        max_results,
+        Some(max_results),
         Brand::from_usize(gear_brand as usize),
         &converted,
     )
