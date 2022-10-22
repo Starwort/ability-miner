@@ -1,7 +1,9 @@
 #![feature(const_for, const_mut_refs, trait_alias)]
 use std::fmt::Display;
 use std::str::FromStr;
+#[cfg(feature = "rayon")]
 use std::sync::atomic::{AtomicU32, Ordering};
+#[cfg(feature = "rayon")]
 use std::sync::Mutex;
 
 #[cfg(feature = "rayon")]
@@ -386,10 +388,10 @@ pub fn get_results<T: CandType>(
         .filter(|seed| slots_match(*seed, &gear_brand, slots));
     #[cfg(not(feature = "rayon"))]
     let results = candidates.filter(|seed| slots_match(*seed, &gear_brand, slots));
-    let count = AtomicU32::new(0);
     if let Some(max_results) = max_results {
         #[cfg(feature = "rayon")]
         {
+            let count = AtomicU32::new(0);
             let results_vec = Mutex::new(Vec::with_capacity(max_results as usize));
             results.for_each(|result| {
                 if count.load(Ordering::Relaxed) < max_results {
@@ -415,7 +417,7 @@ pub fn get_results<T: CandType>(
             }
         }
         #[cfg(not(feature = "rayon"))]
-        results.take(max_results).collect()
+        results.take(max_results as usize).collect()
     } else {
         results.collect()
     }
