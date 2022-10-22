@@ -1,4 +1,4 @@
-#![feature(const_for, const_mut_refs)]
+#![feature(const_for, const_mut_refs, trait_alias)]
 use std::fmt::Display;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -368,24 +368,29 @@ pub struct Slot {
     pub drink: Option<Ability>,
 }
 
+#[cfg(feature = "rayon")]
+pub trait CandType = IntoParallelIterator<Item = u32>;
+#[cfg(not(feature = "rayon"))]
+pub trait CandType = Iterator<Item = u32>;
+
 #[must_use]
-pub fn get_results<T: Iterator<Item = u32>>(
+pub fn get_results<T: CandType>(
     candidates: T,
-    max_results: Option<usize>,
+    max_results: Option<u32>,
     gear_brand: Brand,
     slots: &[Slot],
 ) -> Vec<u32> {
     #[cfg(feature = "rayon")]
     let results = candidates
         .into_par_iter()
-        .filter(|seed| slots_match(*seed, &gear_brand, &slots));
+        .filter(|seed| slots_match(*seed, &gear_brand, slots));
     #[cfg(not(feature = "rayon"))]
-    let results = candidates.filter(|seed| slots_match(*seed, &gear_brand, &slots));
+    let results = candidates.filter(|seed| slots_match(*seed, &gear_brand, slots));
     let count = AtomicU32::new(0);
     if let Some(max_results) = max_results {
         #[cfg(feature = "rayon")]
         {
-            let results_vec = Mutex::new(Vec::with_capacity(max_results));
+            let results_vec = Mutex::new(Vec::with_capacity(max_results as usize));
             results.for_each(|result| {
                 if count.load(Ordering::Relaxed) < max_results {
                     let mut vec = match results_vec.lock() {
@@ -432,7 +437,7 @@ pub fn slots_match(mut seed: u32, &gear_brand: &Brand, slots: &[Slot]) -> bool {
 
 #[cfg(feature = "wasm")]
 #[wasm_bindgen]
-pub fn mine(max_results: usize, gear_brand: u32, slots: &[u32]) -> Vec<u32> {
+pub fn mine(max_results: u32, gear_brand: u32, slots: &[u32]) -> Vec<u32> {
     let converted = slots
         .iter()
         .map(|&data| {

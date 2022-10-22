@@ -1,7 +1,7 @@
 use std::fmt::Display;
 use std::str::FromStr;
 
-use ability_miner::*;
+use ability_miner::{get_ability, Ability, Brand};
 use clap::Parser;
 
 #[derive(Debug, Clone, Copy)]
