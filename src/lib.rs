@@ -4,6 +4,7 @@ use std::str::FromStr;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
 
+#[cfg(feature = "rayon")]
 use rayon::prelude::*;
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
