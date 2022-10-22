@@ -23,9 +23,3 @@ crate-type = ["cdylib", "rlib"]
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
-
-[target.wasm32-unknown-unknown]
-rustflags = ["-C", "target-feature=+atomics,+bulk-memory,+mutable-globals"]
-
-[unstable]
-build-std = ["panic_abort", "std"]
