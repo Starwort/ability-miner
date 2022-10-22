@@ -8,15 +8,16 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.0.7", features = ["derive"] }
 enum-utils = "0.1.2"
-rayon = "1.5.3"
+rayon = { version = "1.5.3", optional = true }
 serde = { version = "1.0.145", optional = true, features = ["serde_derive"] }
 wasm-bindgen = { version = "0.2.83", optional = true }
 wasm-bindgen-rayon = { version = "1.0.3", optional = true }
 
 [features]
-default = []
+default = ["rayon"]
 wasm = ["dep:wasm-bindgen", "dep:wasm-bindgen-rayon"]
 serde = ["dep:serde"]
+rayon = ["dep:rayon"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

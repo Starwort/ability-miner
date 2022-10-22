@@ -368,10 +368,18 @@ pub struct Slot {
 }
 
 #[must_use]
-pub fn get_results(max_results: usize, gear_brand: Brand, slots: &[Slot]) -> Vec<u32> {
-    let results = (0..=u32::MAX)
+pub fn get_results<T: Iterator<Item = u32>>(
+    candidates: T,
+    max_results: usize,
+    gear_brand: Brand,
+    slots: &[Slot],
+) -> Vec<u32> {
+    #[cfg(feature = "rayon")]
+    let results = candidates
         .into_par_iter()
         .filter(|seed| slots_match(*seed, &gear_brand, &slots));
+    #[cfg(not(feature = "rayon"))]
+    let results = candidates.filter(|seed| slots_match(*seed, &gear_brand, &slots));
     let count = AtomicU32::new(0);
     let results_vec = Mutex::new(Vec::with_capacity(max_results));
     results.for_each(|result| {
@@ -431,6 +439,7 @@ pub fn mine(max_results: usize, gear_brand: u32, slots: &[u32]) -> Vec<u32> {
         })
         .collect::<Vec<_>>();
     get_results(
+        0..=u32::MAX,
         max_results,
         Brand::from_usize(gear_brand as usize),
         &converted,
