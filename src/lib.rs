@@ -1,7 +1,5 @@
 #![feature(const_for, const_mut_refs)]
 use std::fmt::Display;
-#[cfg(not(feature = "wasm"))]
-use std::process::exit;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::Mutex;
@@ -9,6 +7,8 @@ use std::sync::Mutex;
 use rayon::prelude::*;
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
+#[cfg(feature = "wasm")]
+pub use wasm_bindgen_rayon::init_thread_pool;
 
 pub const fn advance_seed(seed: &mut u32) -> u32 {
     *seed ^= *seed << 13;
@@ -52,7 +52,9 @@ pub enum Ability {
     Action_Up,
 }
 impl Ability {
+    #[must_use]
     pub const fn from_usize(val: usize) -> Self {
+        #[allow(clippy::enum_glob_use)]
         use Ability::*;
         [
             MainInk_Save,
@@ -72,6 +74,7 @@ impl Ability {
         ][val]
     }
 
+    #[must_use]
     pub const fn internal_name(&self) -> &'static str {
         [
             "MainInk_Save",
@@ -91,6 +94,7 @@ impl Ability {
         ][*self as usize]
     }
 
+    #[must_use]
     pub const fn legacy_internal_name(&self) -> &'static str {
         [
             "MainInk_Save",
@@ -112,6 +116,7 @@ impl Ability {
 }
 impl Display for Ability {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #[allow(clippy::enum_glob_use)]
         use Ability::*;
         match self {
             MainInk_Save => write!(f, "Ink Saver (Main)"),
@@ -232,6 +237,7 @@ impl Brand {
         result
     };
     const _WEIGHTS: [BrandData; 22] = {
+        #[allow(clippy::enum_glob_use)]
         use Ability::*;
         [
             Self::weights(MainInk_Save, OpInkEffect_Reduction),
@@ -260,7 +266,9 @@ impl Brand {
     };
 
     #[inline]
+    #[must_use]
     pub const fn max_num(&self) -> u32 {
+        #[allow(clippy::enum_glob_use)]
         use Brand::*;
         match self {
             B97 | B98 | B99 | None => 28,
@@ -277,34 +285,41 @@ impl Brand {
     }
 
     #[inline]
+    #[must_use]
     pub const fn get_ability(&self, seed: u32) -> Ability {
         let roll = seed % self.max_num();
         self.weighted_ability(roll)
     }
 
     #[inline]
+    #[must_use]
     pub const fn get_ability_drink(&self, seed: u32, drink: Ability) -> Ability {
         let roll = seed % self.max_num_drink(drink);
         self.weighted_ability_drink(roll, drink)
     }
 
     #[inline]
+    #[must_use]
     pub const fn weighted_ability(&self, roll: u32) -> Ability {
         Self::NO_DRINK_RESULT[*self as usize][roll as usize]
     }
 
     #[inline]
+    #[must_use]
     pub const fn weighted_ability_drink(&self, roll: u32, drink: Ability) -> Ability {
         Self::DRINK_RESULT[drink as usize][*self as usize][roll as usize]
     }
 
     #[inline]
+    #[must_use]
     pub const fn max_num_drink(&self, drink: Ability) -> u32 {
         self.max_num() - Self::_WEIGHTS[*self as usize][drink as usize]
     }
 
     #[inline]
+    #[must_use]
     pub const fn from_usize(brand: usize) -> Self {
+        #[allow(clippy::enum_glob_use)]
         use Brand::*;
         [
             B00, B01, B02, B03, B04, B05, B06, B07, B08, B09, B10, B11, B15, B16, B17,
@@ -312,6 +327,7 @@ impl Brand {
         ][brand]
     }
 
+    #[must_use]
     pub const fn internal_name(&self) -> &'static str {
         [
             "B00", "B01", "B02", "B03", "B04", "B05", "B06", "B07", "B08", "B09",
@@ -351,6 +367,7 @@ pub struct Slot {
     pub drink: Option<Ability>,
 }
 
+#[must_use]
 pub fn get_results(max_results: usize, gear_brand: Brand, slots: &[Slot]) -> Vec<u32> {
     let results = (0..=u32::MAX)
         .into_par_iter()
@@ -359,17 +376,29 @@ pub fn get_results(max_results: usize, gear_brand: Brand, slots: &[Slot]) -> Vec
     let results_vec = Mutex::new(Vec::with_capacity(max_results));
     results.for_each(|result| {
         if count.load(Ordering::Relaxed) < 100 {
-            let mut vec = results_vec.lock().unwrap();
+            let mut vec = match results_vec.lock() {
+                Ok(vec) => vec,
+                _ => unreachable!(),
+                // PoisonError
+                // PoisonError can't happen as it happens only
+                // when a thread
+                // with a MutexGuard (obtained here) panics;
+                // this thread can only
+                // panic if obtaining the guard panics, so there
+                // can never be a
+                // PoisonError
+            };
             vec.push(result);
             count.fetch_add(1, Ordering::Relaxed);
-        } else {
-            #[cfg(not(feature = "wasm"))]
-            exit(0)
         }
     });
-    results_vec.into_inner().unwrap()
+    match results_vec.into_inner() {
+        Ok(vec) => vec,
+        _ => unreachable!(), // PoisonError
+    }
 }
 
+#[must_use]
 pub fn slots_match(mut seed: u32, &gear_brand: &Brand, slots: &[Slot]) -> bool {
     for Slot {
         ability,

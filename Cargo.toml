@@ -11,10 +11,11 @@ enum-utils = "0.1.2"
 rayon = "1.5.3"
 serde = { version = "1.0.145", optional = true, features = ["serde_derive"] }
 wasm-bindgen = { version = "0.2.83", optional = true }
+wasm-bindgen-rayon = { version = "1.0.3", optional = true }
 
 [features]
 default = []
-wasm = ["dep:wasm-bindgen"]
+wasm = ["dep:wasm-bindgen", "dep:wasm-bindgen-rayon"]
 serde = ["dep:serde"]
 
 [lib]
