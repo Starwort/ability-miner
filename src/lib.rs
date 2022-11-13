@@ -376,7 +376,7 @@ pub trait CandType = IntoParallelIterator<Item = u32>;
 pub trait CandType = Iterator<Item = u32>;
 
 #[must_use]
-pub fn get_results<T: CandType>(
+pub fn get_initial_seeds<T: CandType>(
     candidates: T,
     max_results: Option<u32>,
     gear_brand: Brand,
@@ -421,6 +421,26 @@ pub fn get_results<T: CandType>(
     } else {
         results.collect()
     }
+}
+
+#[must_use]
+pub fn get_results<T: CandType>(
+    candidates: T,
+    max_results: Option<u32>,
+    gear_brand: Brand,
+    slots: &[Slot],
+) -> Vec<u32> {
+    let mut results = get_initial_seeds(candidates, max_results, gear_brand, slots);
+    for seed in results.iter_mut() {
+        for &Slot {
+            ability,
+            drink,
+        } in slots
+        {
+            assert_eq!(ability, get_ability(seed, gear_brand, drink));
+        }
+    }
+    results
 }
 
 #[must_use]
